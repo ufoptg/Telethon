@@ -6,8 +6,8 @@ from .messagebutton import MessageButton
 from .forward import Forward
 from .file import File
 from .. import TLObject, types, functions, alltlobjects
-from ..extensions import markdown
 from ... import utils, errors
+from ...extensions import markdown 
 
 # Support for spoiler and custom emoji 
 class CustomMarkdown:
