@@ -56,6 +56,9 @@ class ChatAction(EventBuilder):
                              kicked_by=True,
                              users=update.user_id)
 
+        elif isinstance(update, types.UpdateBotChatInviteRequester):
+            return cls.Event(update.peer, join_request=update.invite, users=update.user_id)
+
         # UpdateChannel is sent if we leave a channel, and the update._entities
         # set by _process_update would let us make some guesses. However it's
         # better not to rely on this. Rely only in MessageActionChatDeleteUser.
@@ -75,6 +78,8 @@ class ChatAction(EventBuilder):
                 return cls.Event(msg,
                                  added_by=added_by,
                                  users=action.users)
+            elif isinstance(action, types.MessageActionChatJoinedByRequest):
+                return cls.Event(msg, from_request=True, users=msg.from_id)
             elif isinstance(action, types.MessageActionChatDeleteUser):
                 return cls.Event(msg,
                                  kicked_by=utils.get_peer_id(msg.from_id) if msg.from_id else True,
@@ -107,6 +112,8 @@ class ChatAction(EventBuilder):
             elif isinstance(action, types.MessageActionGameScore):
                 return cls.Event(msg,
                                  new_score=action.score)
+            elif isinstance(action, types.MessageActionSetChatTheme):
+                return cls.Event(msg, emoticon=action.emoticon)
 
         elif isinstance(update, types.UpdateChannelParticipant) \
                 and bool(update.new_participant) != bool(update.prev_participant):
@@ -159,11 +166,18 @@ class ChatAction(EventBuilder):
 
             unpin (`bool`):
                 `True` if the existing pin gets unpinned.
+
+            chat_theme (`bool`):
+                `True` if the chat theme is changed.
+
+            emoticon (`str`):
+                The new emoticon kept with `chat_theme`.
         """
 
         def __init__(self, where, new_photo=None,
                      added_by=None, kicked_by=None, created=None,
-                     users=None, new_title=None, pin_ids=None, pin=None, new_score=None):
+                     users=None, new_title=None, pin_ids=None, pin=None, new_score=None,
+                     emoticon=None, join_request=None, from_request=None):
             if isinstance(where, types.MessageService):
                 self.action_message = where
                 where = where.peer_id
@@ -178,16 +192,18 @@ class ChatAction(EventBuilder):
             self._pin_ids = pin_ids
             self._pinned_messages = None
 
+            self.new_join_request = join_request
             self.new_photo = new_photo is not None
             self.photo = \
                 new_photo if isinstance(new_photo, types.Photo) else None
 
             self._added_by = None
             self._kicked_by = None
+            self.from_request = from_request
             self.user_added = self.user_joined = self.user_left = \
                 self.user_kicked = self.unpin = False
 
-            if added_by is True:
+            if added_by is True or from_request is True:
                 self.user_joined = True
             elif added_by:
                 self.user_added = True
@@ -215,6 +231,10 @@ class ChatAction(EventBuilder):
             self.new_title = new_title
             self.new_score = new_score
             self.unpin = not pin
+            self.emoticon = emoticon
+            # below is line done, so that emoticon="" also get considered as chat theme update.
+            # and can be way to trace Chat Theme Disabled.
+            self.chat_theme = True if emoticon != None else False
 
         def _set_client(self, client):
             super()._set_client(client)
@@ -309,6 +329,17 @@ class ChatAction(EventBuilder):
                 self._added_by = await self._client.get_entity(self._added_by)
 
             return self._added_by
+
+        async def approve_user(self, approved: bool = True):
+            """
+            Approve or disapprove chat join request of user.
+             """
+            if self.new_join_request:
+                return await self._client(functions.messages.HideChatJoinRequestRequest(
+                    await self.get_input_chat(),
+                    user_id=self.user_id,
+                    approved=approved
+                ))
 
         @property
         def kicked_by(self):
