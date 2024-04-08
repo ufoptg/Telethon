@@ -224,6 +224,7 @@ class Message(ChatGetter, SenderGetter, TLObject):
         self.saved_peer_id = saved_peer_id
         self.fwd_from = fwd_from
         self.via_bot_id = via_bot_id
+        self.via_business_bot_id = via_business_bot_id
         self.reply_to = reply_to
         self.media = None if isinstance(media, types.MessageMediaEmpty) else media
         self.reply_markup = reply_markup
