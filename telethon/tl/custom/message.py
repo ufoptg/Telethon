@@ -91,7 +91,10 @@ class Message(ChatGetter, SenderGetter, TLObject):
 
         invert_media (`bool`):
             Whether the media in this message should be inverted.
-
+            
+        offline (`bool`):
+            Whether the message was sent by an implicit action, for example, as an away or a greeting business message, or as a scheduled message.
+            
         id (`int`):
             The ID of this message. This field is *always* present.
             Any other member is optional and may be `None`.
@@ -215,6 +218,7 @@ class Message(ChatGetter, SenderGetter, TLObject):
         self.pinned = pinned
         self.noforwards = noforwards
         self.invert_media = invert_media
+        self.offline = offline
         self.from_id = from_id
         self.from_boosts_applied = from_boosts_applied
         self.saved_peer_id = saved_peer_id
