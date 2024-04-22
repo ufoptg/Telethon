@@ -85,3 +85,31 @@ useful information.
 .. |logo| image:: logo.svg
     :width: 24pt
     :height: 24pt
+
+File Attributes
+---------------
+
+.. code-block:: python
+
+from telethon.tl.types import InputPeerSelf, InputMediaUploadedDocument
+
+msg_media = await event.client.upload_file(file_path)
+thumbnail_file = await event.client.upload_file(thumb_path)
+
+# Define audio attributes (you can leave it empty if not needed)
+audio_attributes = []
+
+# Create an input media object with the audio file and thumbnail
+input_media = InputMediaUploadedDocument(
+    file=msg_media,              # Audio file
+    mime_type='audio/mpeg',      # Mime type of the audio file
+    attributes=audio_attributes, # Audio attributes (empty list if not needed)
+    thumb=thumbnail_file         # Thumbnail file
+)
+
+# Upload the media
+file = await event.client(UploadMediaRequest(
+    InputPeerSelf(),  # Upload to self
+    media=input_media # Input media object
+))
+
