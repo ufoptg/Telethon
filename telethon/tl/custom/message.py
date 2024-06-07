@@ -813,10 +813,12 @@ class Message(ChatGetter, SenderGetter, TLObject):
         translated_text = translation_response.result[0].text
         return translated_text
 
-    async def transcribe(self):
+    async def transcribe(self, target_language=None):
         """
-        Transcribes the audio message to text.
+        Transcribes the audio message to text and optionally translates it to the target language.
 
+        :param target_language: The language code to translate the transcribed text to. Default is None.
+                            If None, no translation will be performed.
         :return: The transcribed text.
         """
         if not self.media or not isinstance(self.media, types.MessageMediaDocument):
@@ -824,12 +826,24 @@ class Message(ChatGetter, SenderGetter, TLObject):
 
         peer = await self.get_input_chat()
 
-        transcribe_request = functions.messages.TranscribeAudioRequest(peer=peer, msg_id=self.id)
+        transcribe_request = TranscribeAudioRequest(peer=peer, msg_id=self.id)
         transcribe_response = await self.client(transcribe_request)
 
         transcribed_text = transcribe_response.text
 
-        return transcribed_text
+        if target_language:
+
+            text_entity = types.TextWithEntities(text=transcribed_text, entities=[])
+            translation_request = functions.messages.TranslateTextRequest(
+                peer=None, text=[text_entity], to_lang=target_language
+            )
+            translation_response = await self.client(translation_request)
+
+            translated_text = translation_response.result[0].text
+
+            return translated_text
+        else:
+            return transcribed_text
 
     async def respond(self, *args, **kwargs):
         """
