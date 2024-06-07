@@ -814,21 +814,21 @@ class Message(ChatGetter, SenderGetter, TLObject):
         return translated_text
 
     async def transcribe(self):
-	    """
-	    Transcribes the audio message to text.
+        """
+        Transcribes the audio message to text.
 
         :return: The transcribed text.
         """
         if not self.media or not isinstance(self.media, types.MessageMediaAudio):
-        	return None
+            return None
 
         peer = await self.get_input_chat()
 
         transcribe_response = await self.client.send(
-        	functions.messages.GetMessageEditData(
+            functions.messages.GetMessageEditData(
                 peer=peer,
                 id=self.id,
-        	)
+            )
         )
 
         transcribed_text = transcribe_response.transcribed_text
