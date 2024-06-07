@@ -824,7 +824,7 @@ class Message(ChatGetter, SenderGetter, TLObject):
 
         peer = await self.get_input_chat()
 
-        transcribe_request = TranscribeAudioRequest(peer=peer, msg_id=self.id)
+        transcribe_request = functions.messages.TranscribeAudioRequest(peer=peer, msg_id=self.id)
         transcribe_response = await self.client(transcribe_request)
 
         transcribed_text = transcribe_response.text
