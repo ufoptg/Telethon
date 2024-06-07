@@ -819,17 +819,17 @@ class Message(ChatGetter, SenderGetter, TLObject):
 
         :return: The transcribed text.
         """
-    if not self.media or not isinstance(self.media, types.MessageMediaDocument):
-        return None
+        if not self.media or not isinstance(self.media, types.MessageMediaDocument):
+            return None
 
-    peer = await self.get_input_chat()
+        peer = await self.get_input_chat()
 
-    transcribe_request = TranscribeAudioRequest(peer=peer, msg_id=self.id)
-    transcribe_response = await self.client(transcribe_request)
+        transcribe_request = TranscribeAudioRequest(peer=peer, msg_id=self.id)
+        transcribe_response = await self.client(transcribe_request)
 
-    transcribed_text = transcribe_response.text
+        transcribed_text = transcribe_response.text
 
-    return transcribed_text
+        return transcribed_text
 
     async def respond(self, *args, **kwargs):
         """
