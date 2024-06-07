@@ -800,16 +800,17 @@ class Message(ChatGetter, SenderGetter, TLObject):
         :param target_language: The language code to translate the message to. Default is 'en' (English).
         :return: The translated text.
         """
-        if not self.text:
+        if not self.message:
             return None  # No text to translate
 
-        # Ensure that the client supports translation
-        if not hasattr(self.client, 'get_translated_text'):
-            raise NotImplementedError("Translation is not supported by the client.")
+        text_entity = types.TextWithEntities(text=self.message, entities=[])
+        translation_request = functions.messages.TranslateTextRequest(
+            peer=None, text=[text_entity], to_lang=target_language
+        )
 
-        # Get translated text from the client
-        translated_text = await self.client.get_translated_text(self.text, target_language)
+        translation_response = await self.client(translation_request)
 
+        translated_text = translation_response.result[0].text
         return translated_text
 
     async def respond(self, *args, **kwargs):
