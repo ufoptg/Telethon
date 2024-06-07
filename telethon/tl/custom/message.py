@@ -813,6 +813,24 @@ class Message(ChatGetter, SenderGetter, TLObject):
         translated_text = translation_response.result[0].text
         return translated_text
 
+    async def transcribe(self):
+        """
+        Transcribes the audio message to text.
+
+        :return: The transcribed text.
+        """
+        if not self.audio:
+            return None  # No audio to transcribe
+
+        peer = await self.get_input_chat()
+        transcribe_request = functions.messages.TranscribeAudioRequest(
+            peer=peer, msg_id=self.id
+        )
+
+        transcribe_response = await self.client(transcribe_request)
+
+        return transcribe_response.text
+
     async def respond(self, *args, **kwargs):
         """
         Responds to the message (not as a reply). Shorthand for
