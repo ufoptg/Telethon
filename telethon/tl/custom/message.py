@@ -793,6 +793,25 @@ class Message(ChatGetter, SenderGetter, TLObject):
 
         return self._reply_message
 
+    async def translate(self, target_language='en'):
+        """
+        Translates the message text to the target language.
+        
+        :param target_language: The language code to translate the message to. Default is 'en' (English).
+        :return: The translated text.
+        """
+        if not self.text:
+            return None  # No text to translate
+
+        # Ensure that the client supports translation
+        if not hasattr(self.client, 'get_translated_text'):
+            raise NotImplementedError("Translation is not supported by the client.")
+
+        # Get translated text from the client
+        translated_text = await self.client.get_translated_text(self.text, target_language)
+
+        return translated_text
+
     async def respond(self, *args, **kwargs):
         """
         Responds to the message (not as a reply). Shorthand for
