@@ -930,68 +930,68 @@ class MessageMethods:
         big: bool = None,
         **kwargs,
     ) -> 'types.Message':
-    """
-    Send a reaction to a message.
+        """
+        Send a reaction to a message.
 
-    Args:
-       entity (`entity`): The entity where the message is located.
-       msg_id (`int`): The ID of the message to react to.
-       reaction (`str` | `types.ReactionCustomEmoji` | None): The reaction emoji or None for empty reaction.
-       big (`bool`, optional): Whether to send a big reaction.
+        Args:
+           entity (`entity`): The entity where the message is located.
+           msg_id (`int`): The ID of the message to react to.
+           reaction (`str` | `types.ReactionCustomEmoji` | None): The reaction emoji or None for empty reaction.
+           big (`bool`, optional): Whether to send a big reaction.
 
-    Returns:
-       `types.Message`: The sent reaction message.
-    """
-    if isinstance(entity, str):
-        entity = await self.get_input_entity(entity)
+        Returns:
+           `types.Message`: The sent reaction message.
+        """
+        if isinstance(entity, str):
+            entity = await self.get_input_entity(entity)
 
-    if isinstance(reaction, str):
-        match = re.match(r'^\[.+\]\(emoji/(\d+)\)$', reaction)
-        if match:
-            document_id = int(match.group(1))
-            reaction = [types.ReactionCustomEmoji(document_id=document_id)]
-        else:
-            reaction = [types.ReactionEmoji(reaction)]
-    elif isinstance(reaction, types.ReactionCustomEmoji):
-        reaction = [reaction]
-    elif not reaction:
-        reaction = [types.ReactionEmpty()]
-    elif isinstance(reaction, list):
-        reaction_list = []
-        for r in reaction:
-            if isinstance(r, str):
-                match = re.match(r'^\[.+\]\(emoji/(\d+)\)$', r)
-                if match:
-                    document_id = int(match.group(1))
-                    reaction_list.append(types.ReactionCustomEmoji(document_id=document_id))
-                else:
-                    reaction_list.append(types.ReactionEmoji(r))
-            elif isinstance(r, types.ReactionCustomEmoji):
-                reaction_list.append(r)
+        if isinstance(reaction, str):
+            match = re.match(r'^\[.+\]\(emoji/(\d+)\)$', reaction)
+            if match:
+                document_id = int(match.group(1))
+                reaction = [types.ReactionCustomEmoji(document_id=document_id)]
             else:
-                raise ValueError("Unsupported reaction type in list")
-        reaction = reaction_list
-    else:
-        raise ValueError("Unsupported reaction type")
+                reaction = [types.ReactionEmoji(reaction)]
+        elif isinstance(reaction, types.ReactionCustomEmoji):
+            reaction = [reaction]
+        elif not reaction:
+            reaction = [types.ReactionEmpty()]
+        elif isinstance(reaction, list):
+            reaction_list = []
+            for r in reaction:
+                if isinstance(r, str):
+                    match = re.match(r'^\[.+\]\(emoji/(\d+)\)$', r)
+                    if match:
+                        document_id = int(match.group(1))
+                        reaction_list.append(types.ReactionCustomEmoji(document_id=document_id))
+                    else:
+                        reaction_list.append(types.ReactionEmoji(r))
+                elif isinstance(r, types.ReactionCustomEmoji):
+                    reaction_list.append(r)
+                else:
+                    raise ValueError("Unsupported reaction type in list")
+            reaction = reaction_list
+        else:
+            raise ValueError("Unsupported reaction type")
 
-    request = functions.messages.SendReactionRequest(
-        peer=entity,
-        msg_id=msg_id,
-        big=big,
-        reaction=reaction,
-        **kwargs,
-    )
-
-    result = await self(request)
-    if isinstance(result, types.UpdateShortSentMessage):
-        return types.Message(
-            id=result.id,
-            peer_id=await self._get_peer(entity),
-            date=result.date,
-            out=result.out,
-            reaction=result.reaction,
+        request = functions.messages.SendReactionRequest(
+            peer=entity,
+            msg_id=msg_id,
+            big=big,
+            reaction=reaction,
+            **kwargs,
         )
-    return self._get_response_message(request, result, entity)
+
+        result = await self(request)
+        if isinstance(result, types.UpdateShortSentMessage):
+            return types.Message(
+                id=result.id,
+                peer_id=await self._get_peer(entity),
+                date=result.date,
+                out=result.out,
+                reaction=result.reaction,
+            )
+        return self._get_response_message(request, result, entity)
 
     async def forward_messages(
             self: 'TelegramClient',
