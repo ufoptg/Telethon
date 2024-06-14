@@ -958,18 +958,16 @@ class MessageMethods:
         )
 
         result = await self(request)
-
-        if isinstance(result, types.Updates) and result.messages:
-            sent_message = result.messages[0]
+        if isinstance(result, types.UpdateShortSentMessage):
             return types.Message(
-                id=sent_message.id,
+                id=result.id,
                 peer_id=await self._get_peer(entity),
-                date=sent_message.date,
-                out=sent_message.out,
-                reaction=sent_message.reaction,
+                date=result.date,
+                out=result.out,
+                reaction=result.reaction,
             )
 
-        return None
+        return self._get_response_message(request, result, entity)
 
     async def forward_messages(
             self: 'TelegramClient',
