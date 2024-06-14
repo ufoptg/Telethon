@@ -866,6 +866,36 @@ class Message(ChatGetter, SenderGetter, TLObject):
             return await self._client.send_message(
                 await self.get_input_chat(), *args, **kwargs)
 
+    async def send_reaction(
+        self,
+        reaction=None,
+        big: Optional[bool] = None,
+        **kwargs,
+    ):
+        """
+        Send reaction to this message.
+
+        Args:
+           reaction:
+           big:
+        """
+        if isinstance(reaction, str):
+            reaction = [types.ReactionEmoji(reaction)]
+        elif not reaction:
+            reaction = [types.ReactionEmpty()]
+
+        # Use `self.to_id` to get the peer to which this message was sent.
+        peer = await self.get_input_chat()
+
+        # Call the `send_reaction` method on the client with necessary parameters.
+        return await self.client.send_reaction(
+            peer=peer,
+            msg_id=self.id,
+            reaction=reaction,
+            big=big,
+            **kwargs,
+        )
+
     async def forward_to(self, *args, **kwargs):
         """
         Forwards the message. Shorthand for
