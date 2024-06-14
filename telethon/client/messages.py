@@ -946,6 +946,8 @@ class MessageMethods:
 
         if isinstance(reaction, str):
             reaction = [types.ReactionEmoji(reaction)]
+        elif isinstance(reaction, types.ReactionCustomEmoji):
+            reaction = [reaction]
         elif not reaction:
             reaction = [types.ReactionEmpty()]
 
