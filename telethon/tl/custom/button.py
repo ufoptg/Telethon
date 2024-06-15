@@ -314,18 +314,8 @@ class Button:
         return types.KeyboardButtonGame(text)
 
     @staticmethod
-    def web_view(text, url=None):
-        """
-        Creates a new inline button to open the desired URL in a WebView.
+    def mention(text, user):
+        """Send Button with UserProfile mention.
 
-        If no `url` is given, the `text` will be used as the URL instead.
-
-        You cannot detect that the user clicked this button directly.
-
-        When the user clicks this button, the URL will open in the Telegram
-        app's WebView directly.
-
-
-        TS ~ Note: This method is not yet implemented in the Telegram API.
-        """
-        return types.KeyboardButtonWebView(text, url or text)
+        call 'get_input_entity' to fill in user parameter."""
+        return types.InputKeyboardButtonUserProfile(text, user)
