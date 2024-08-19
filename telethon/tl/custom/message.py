@@ -828,7 +828,7 @@ class Message(ChatGetter, SenderGetter, TLObject):
                 translated_answers.append(answer_translation_response.result[0].text)
             
             # Combine the translated question and answers into a formatted string
-            translated_text = f"**Poll Question:**\n{translated_question}\n\n**Poll Answers:**\n"
+            translated_text = f"Poll Question:\n{translated_question}\n\nPoll Answers:\n"
             translated_text += "\n".join([f"- {answer}" for answer in translated_answers])
             return translated_text
 
