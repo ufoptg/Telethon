@@ -3,6 +3,8 @@ Telethon
 .. epigraph::
 
   ⭐️ Thanks **everyone** who has starred the project, it means a lot!
+      ~ PLEASE Respect the ongoing work provided by both ToxygenX and ufoptg, 
+        we'd also like to remind you to not forget the continued support from New-dev0.
 
 |logo| **Telethon** is an asyncio_ **Python 3**
 MTProto_ library to interact with Telegram_'s API
