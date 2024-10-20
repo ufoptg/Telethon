@@ -74,35 +74,26 @@ def parse(message, delimiters=None, url_re=None):
 
             # Handle collapsed blockquote, if `>>` is used as the delimiter
             if delim == '>>':
-                end = message.find(delim, i + len(delim) + 1)
-                if end != -1:
-                    message = ''.join((
-                        message[:i],
-                        message[i + len(delim):end],
-                        message[end + len(delim):]
-                    ))
+                end = message.find('\n', i + len(delim))  # Capture until newline for blockquote
+                if end == -1:  # In case there's no newline
+                    end = len(message)
 
-                    # Add a collapsed blockquote entity
-                    result.append(MessageEntityBlockquote(i, end - i - len(delim), collapsed=True))
-
-                    i = end - len(delim)
-                    continue
+                # Capture the blockquote without the delimiter
+                result.append(MessageEntityBlockquote(i, end - i, collapsed=True))
+                message = message[:i] + message[i + len(delim):]  # Remove the delimiter
+                i = end - len(delim)
+                continue
 
             # Handle normal blockquote (>)
             elif delim == '>':
-                end = message.find(delim, i + len(delim) + 1)
-                if end != -1:
-                    message = ''.join((
-                        message[:i],
-                        message[i + len(delim):end],
-                        message[end + len(delim):]
-                    ))
+                end = message.find('\n', i + len(delim))
+                if end == -1:
+                    end = len(message)
 
-                    # Add a regular blockquote entity (collapsed=False by default)
-                    result.append(MessageEntityBlockquote(i, end - i - len(delim), collapsed=False))
-
-                    i = end - len(delim)
-                    continue
+                result.append(MessageEntityBlockquote(i, end - i, collapsed=False))
+                message = message[:i] + message[i + len(delim):]
+                i = end - len(delim)
+                continue
 
             # Handle other entities as usual
             end = message.find(delim, i + len(delim) + 1)
@@ -158,13 +149,10 @@ def parse(message, delimiters=None, url_re=None):
     return del_surrogate(message), result
 
 
-
 def unparse(text, entities, delimiters=None, url_fmt=None):
     """
     Performs the reverse operation to .parse(), effectively returning
     markdown-like syntax given a normal text and its MessageEntity's.
- 
- 
     :param text: the text to be reconverted into markdown.
     :param entities: the MessageEntity's applied to the text.
     :return: a markdown-like text representing the combination of both inputs.
@@ -219,4 +207,5 @@ def unparse(text, entities, delimiters=None, url_fmt=None):
         text = text[:at] + what + text[at:]
 
     return del_surrogate(text)
+
 
