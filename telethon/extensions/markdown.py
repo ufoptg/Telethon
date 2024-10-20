@@ -1,6 +1,6 @@
 """
 Simple markdown parser which does not support nesting. Intended primarily
-for use within the library, which attempts to handle emojies correctly,
+for use within the library, which attempts to handle emojis correctly,
 since they seem to count as two characters and it's a bit strange.
 """
 import re
@@ -11,7 +11,7 @@ from ..tl import TLObject
 from ..tl.types import (
     MessageEntityBold, MessageEntityItalic, MessageEntityCode,
     MessageEntityPre, MessageEntityTextUrl, MessageEntityMentionName,
-    MessageEntityStrike, MessageEntityUnderline
+    MessageEntityStrike, MessageEntityUnderline, MessageEntitySpoiler
 )
 
 DEFAULT_DELIMITERS = {
@@ -20,7 +20,8 @@ DEFAULT_DELIMITERS = {
     '++': MessageEntityUnderline,
     '~~': MessageEntityStrike,
     '`': MessageEntityCode,
-    '```': MessageEntityPre
+    '```': MessageEntityPre,
+    '??': MessageEntitySpoiler
 }
 
 DEFAULT_URL_RE = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
