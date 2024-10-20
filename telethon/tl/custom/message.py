@@ -800,17 +800,46 @@ class Message(ChatGetter, SenderGetter, TLObject):
         :param target_language: The language code to translate the message to. Default is 'en' (English).
         :return: The translated text.
         """
-        if not self.message:
+        if not self.message and not hasattr(self.media, 'poll'):
             return None  # No text to translate
 
+        if hasattr(self.media, 'poll'):
+            # Handle translation of poll questions and answers
+            poll = self.media.poll
+            question_text = poll.question.text
+            answers_text = [answer.text.text for answer in poll.answers]
+            
+            # Translate the poll question
+            question_entity = types.TextWithEntities(text=question_text, entities=[])
+            question_translation_request = functions.messages.TranslateTextRequest(
+                peer=None, text=[question_entity], to_lang=target_language
+            )
+            question_translation_response = await self.client(question_translation_request)
+            translated_question = question_translation_response.result[0].text
+            
+            # Translate each poll answer
+            translated_answers = []
+            for answer_text in answers_text:
+                answer_entity = types.TextWithEntities(text=answer_text, entities=[])
+                answer_translation_request = functions.messages.TranslateTextRequest(
+                    peer=None, text=[answer_entity], to_lang=target_language
+                )
+                answer_translation_response = await self.client(answer_translation_request)
+                translated_answers.append(answer_translation_response.result[0].text)
+            
+            # Combine the translated question and answers into a formatted string
+            translated_text = f"Poll Question:\n{translated_question}\n\nPoll Answers:\n"
+            translated_text += "\n".join([f"- {answer}" for answer in translated_answers])
+            return translated_text
+
+        # Regular text message translation
         text_entity = types.TextWithEntities(text=self.message, entities=[])
         translation_request = functions.messages.TranslateTextRequest(
             peer=None, text=[text_entity], to_lang=target_language
         )
-
         translation_response = await self.client(translation_request)
-
         translated_text = translation_response.result[0].text
+
         return translated_text
 
     async def transcribe(self, target_language=None):
@@ -865,6 +894,15 @@ class Message(ChatGetter, SenderGetter, TLObject):
             kwargs['reply_to'] = self.id
             return await self._client.send_message(
                 await self.get_input_chat(), *args, **kwargs)
+
+    async def react(self, *args, **kwargs):
+        """
+        Reacts to the message. Shorthand for
+        `telethon.client.messages.MessageMethods.send_reaction`.
+        """
+        if self._client:
+            return await self._client.send_reaction(
+                self.chat_id, self.id, *args, **kwargs)
 
     async def forward_to(self, *args, **kwargs):
         """
