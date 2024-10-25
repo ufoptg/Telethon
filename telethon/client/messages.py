@@ -1375,7 +1375,10 @@ class MessageMethods:
             return await self([functions.messages.DeleteMessagesRequest(
                          list(c), revoke) for c in utils.chunks(message_ids)])
 
-    async def get_forum_topics(self: 'TelegramClient', entity: 'hints.EntityLike', limit: int = 10):
+    async def get_forum_topics(
+            self: 'TelegramClient',
+            entity: 'hints.EntityLike',
+            limit: int = 10) -> 'typing.Sequence[types.ForumTopic]':
         """
         Retrieve forum topics for a group or channel.
 
@@ -1403,15 +1406,19 @@ class MessageMethods:
         except Exception as e:
             raise RuntimeError("Failed to retrieve forum topics") from e
 
-    # New method for sending a message to a specific topic
-    async def send_message_to_topic(self: 'TelegramClient', group_id, topic_index, message: 'hints.MessageLike'):
+
+    async def send_message_to_topic(
+            self: 'TelegramClient',
+            entity: 'hints.EntityLike',
+            topic_index: int,
+            message: 'hints.MessageLike' = '') -> None:
         """
         Send a message to a specific topic within a forum-enabled group.
-        
+    
         Arguments
-            group_id (`entity`):
-                The ID of the group or channel where the message should be sent.
-            
+            entity (`hints.EntityLike`):
+                The identifier of the group or channel where the message should be sent.
+        
             topic_index (`int`):
                 The index of the topic to send the message to.
 
@@ -1421,13 +1428,13 @@ class MessageMethods:
         Returns
             None
         """
-        group = await self.get_entity(group_id)
+        group = await self.get_entity(entity)
         if isinstance(group, types.Channel) and group.megagroup:
             forum_topics = await self.get_forum_topics(group)
             if forum_topics and 1 <= topic_index <= len(forum_topics):
                 selected_topic = forum_topics[topic_index - 1]
                 await self.send_message(
-                    group_id,
+                    entity,
                     message,
                     reply_to=selected_topic.id,
                 )
