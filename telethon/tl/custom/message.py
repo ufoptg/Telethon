@@ -344,7 +344,10 @@ class Message(ChatGetter, SenderGetter, TLObject):
                 if self.reply_to.reply_from.from_id:
                     self._reply_to_sender = entities.get(utils.get_peer_id(self.reply_to.reply_from.from_id))
 
-
+        if hasattr(self, 'topic_id') and self.topic_id is not None:
+            self._topic_id = self.topic_id  # Safely set _topic_id
+        if hasattr(self, 'topic_title') and self.topic_title is not None:
+            self._topic_title = self.topic_title  # Safely set _topic_title
 
     # endregion Initialization
 
