@@ -11,7 +11,7 @@ from ..tl import TLObject
 from ..tl.types import (
     MessageEntityBold, MessageEntityItalic, MessageEntityCode,
     MessageEntityPre, MessageEntityTextUrl, MessageEntityMentionName,
-    MessageEntityStrike, MessageEntityUnderline, MessageEntitySpoiler
+    MessageEntityStrike, MessageEntityUnderline, MessageEntitySpoiler, MessageEntityBlockquote
 )
 
 DEFAULT_DELIMITERS = {
@@ -21,7 +21,8 @@ DEFAULT_DELIMITERS = {
     '~~': MessageEntityStrike,
     '`': MessageEntityCode,
     '```': MessageEntityPre,
-    '$$': MessageEntitySpoiler
+    '$$': MessageEntitySpoiler,
+    '^^': lambda *a, **k: MessageEntityBlockquote(*a, **k, collapsed=True),
 }
 
 DEFAULT_URL_RE = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
