@@ -187,6 +187,12 @@ class Message(ChatGetter, SenderGetter, TLObject):
         action (:tl:`MessageAction`):
             The message action object of the message for :tl:`MessageService`
             instances, which will be `None` for other types of messages.
+            
+        topic_id (`int`):
+            The ID of the topic in the forum.
+
+        topic_title (`str`):
+            The title of the forum topic.
 
         saved_peer_id (:tl:`Peer`)
     """
@@ -198,7 +204,7 @@ class Message(ChatGetter, SenderGetter, TLObject):
             id: int, peer_id: types.TypePeer,
             date: Optional[datetime]=None, message: Optional[str]=None,
             # Copied from Message.__init__ signature
-            out: Optional[bool]=None, mentioned: Optional[bool]=None, media_unread: Optional[bool]=None, silent: Optional[bool]=None, post: Optional[bool]=None, from_scheduled: Optional[bool]=None, legacy: Optional[bool]=None, edit_hide: Optional[bool]=None, pinned: Optional[bool]=None, noforwards: Optional[bool]=None, invert_media: Optional[bool]=None, offline: Optional[bool]=None, from_id: Optional[types.TypePeer]=None, from_boosts_applied: Optional[int]=None, saved_peer_id: Optional[types.TypePeer]=None, fwd_from: Optional[types.TypeMessageFwdHeader]=None, via_bot_id: Optional[int]=None, via_business_bot_id: Optional[int]=None, reply_to: Optional[types.TypeMessageReplyHeader]=None, media: Optional[types.TypeMessageMedia]=None, reply_markup: Optional[types.TypeReplyMarkup]=None, entities: Optional[List[types.TypeMessageEntity]]=None, views: Optional[int]=None, forwards: Optional[int]=None, replies: Optional[types.TypeMessageReplies]=None, edit_date: Optional[datetime]=None, post_author: Optional[str]=None, grouped_id: Optional[int]=None, reactions: Optional[types.TypeMessageReactions]=None, restriction_reason: Optional[List[types.TypeRestrictionReason]]=None, ttl_period: Optional[int]=None, quick_reply_shortcut_id: Optional[int]=None, effect: Optional[int]=None, factcheck: Optional[types.TypeFactCheck]=None,
+            out: Optional[bool]=None, mentioned: Optional[bool]=None, media_unread: Optional[bool]=None, silent: Optional[bool]=None, post: Optional[bool]=None, from_scheduled: Optional[bool]=None, legacy: Optional[bool]=None, edit_hide: Optional[bool]=None, pinned: Optional[bool]=None, noforwards: Optional[bool]=None, invert_media: Optional[bool]=None, offline: Optional[bool]=None, from_id: Optional[types.TypePeer]=None, from_boosts_applied: Optional[int]=None, saved_peer_id: Optional[types.TypePeer]=None, fwd_from: Optional[types.TypeMessageFwdHeader]=None, via_bot_id: Optional[int]=None, via_business_bot_id: Optional[int]=None, reply_to: Optional[types.TypeMessageReplyHeader]=None, media: Optional[types.TypeMessageMedia]=None, reply_markup: Optional[types.TypeReplyMarkup]=None, entities: Optional[List[types.TypeMessageEntity]]=None, views: Optional[int]=None, forwards: Optional[int]=None, replies: Optional[types.TypeMessageReplies]=None, edit_date: Optional[datetime]=None, post_author: Optional[str]=None, grouped_id: Optional[int]=None, reactions: Optional[types.TypeMessageReactions]=None, restriction_reason: Optional[List[types.TypeRestrictionReason]]=None, ttl_period: Optional[int]=None, quick_reply_shortcut_id: Optional[int]=None, effect: Optional[int]=None, factcheck: Optional[types.TypeFactCheck]=None, topic_id: Optional[int]=None, topic_title: Optional[str]=None,
             # Copied from MessageService.__init__ signature
             action: Optional[types.TypeMessageAction]=None
     ):
@@ -237,6 +243,8 @@ class Message(ChatGetter, SenderGetter, TLObject):
         self.grouped_id = grouped_id
         self.reactions = reactions
         self.restriction_reason = restriction_reason
+        self.topic_id = topic_id
+        self.topic_title = topic_title
         self.ttl_period = ttl_period
         self.quick_reply_shortcut_id = quick_reply_shortcut_id
         self.effect = effect
@@ -336,7 +344,10 @@ class Message(ChatGetter, SenderGetter, TLObject):
                 if self.reply_to.reply_from.from_id:
                     self._reply_to_sender = entities.get(utils.get_peer_id(self.reply_to.reply_from.from_id))
 
-
+        if hasattr(self, 'topic_id') and self.topic_id is not None:
+            self._topic_id = self.topic_id  # Safely set _topic_id
+        if hasattr(self, 'topic_title') and self.topic_title is not None:
+            self._topic_title = self.topic_title  # Safely set _topic_title
 
     # endregion Initialization
 
@@ -792,6 +803,48 @@ class Message(ChatGetter, SenderGetter, TLObject):
                 )
 
         return self._reply_message
+
+    async def get_topics(self, chat_id: Optional['hints.EntityLike'] = None, limit: int = 10, *args, **kwargs):
+        """
+        Retrieves forum topics for the specified group or channel.
+
+        Shorthand for `telethon.client.messages.MessageMethods.get_forum_topics`
+        with the entity already set. If no chat_id is provided, uses the message's chat.
+
+        Args:
+            chat_id (Optional['hints.EntityLike']): The chat ID for the group or channel. Default is None.
+            limit (int, optional): The maximum number of topics to retrieve. Default is 10.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            List[forum_topic]: A list of forum topics for the specified chat.
+        """
+        if self._client:
+            entity = await self._client.get_input_entity(chat_id or self.peer_id)  # Use provided chat_id or fallback
+            return await self._client.get_forum_topics(entity, limit=limit, *args, **kwargs)
+
+    async def send_topic_message(self, chat_id: Optional['hints.EntityLike'], topic_index: int, message: 'hints.MessageLike', *args, **kwargs):
+        """
+        Sends a message to a specific topic in the specified group or channel.
+
+        Shorthand for `telethon.client.messages.MessageMethods.send_message_to_topic`
+        with the entity already set.
+
+        Args:
+            chat_id (Optional['hints.EntityLike']): The chat ID for the group or channel. Default is None.
+            topic_index (int): The index of the topic to send the message to.
+            message (hints.MessageLike): The message to send.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Message: The sent message object.
+        """
+        if self._client:
+            entity = await self._client.get_input_entity(chat_id)  # Use provided chat_id
+            return await self._client.send_message_to_topic(entity, topic_index, message, *args, **kwargs)
+
 
     async def translate(self, target_language='en'):
         """

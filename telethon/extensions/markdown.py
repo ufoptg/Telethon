@@ -11,7 +11,8 @@ from ..tl import TLObject
 from ..tl.types import (
     MessageEntityBold, MessageEntityItalic, MessageEntityCode,
     MessageEntityPre, MessageEntityTextUrl, MessageEntityMentionName,
-    MessageEntityStrike, MessageEntityUnderline, MessageEntitySpoiler, MessageEntityBlockquote
+    MessageEntityStrike, MessageEntityUnderline, MessageEntitySpoiler,
+    MessageEntityBlockquote
 )
 
 DEFAULT_DELIMITERS = {

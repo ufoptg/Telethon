@@ -88,7 +88,7 @@ useful information.
     :width: 24pt
     :height: 24pt
 
-File Attributes
+Audio File Attributes
 ---------------
 
 .. code-block:: python
@@ -109,9 +109,44 @@ File Attributes
         thumb=thumbnail_file         # Thumbnail file
     )
 
+    # Create an input media object with a Spoiler
+    input_media = InputMediaUploadedDocument(
+        file=msg_media,              # Audio file
+        mime_type='audio/mpeg',      # Mime type of the audio file
+        attributes=audio_attributes, # Audio attributes (empty list if not needed)
+        thumb=thumbnail_file         # Thumbnail file
+    )
+
     # Upload the media
     file = await event.client(UploadMediaRequest(
         InputPeerSelf(),  # Upload to self
         media=input_media # Input media object
     ))
 
+
+Media File Attributes
+---------------
+
+.. code-block:: python
+
+    from telethon.tl.types import InputMediaUploadedDocument, DocumentAttributeImageSize, DocumentAttributeHasSpoiler
+
+    # Upload the image file
+    uploaded_image = await client.upload_file("path/to/your/image.jpg")
+
+    # Image attributes: size of the image
+    image_attributes = [
+        DocumentAttributeImageSize(w=1024, h=768),  # Replace with the actual dimensions of your image
+        DocumentAttributeHasSpoiler()               # Add the spoiler attribute
+    ]
+
+    # Send the image as a document with the spoiler effect
+    await client.send_file(
+        chat,
+        InputMediaUploadedDocument(
+            file=uploaded_image,              # Uploaded image file
+            mime_type='image/jpeg',           # Mime type of the image file
+            attributes=image_attributes,      # Image attributes (including the spoiler)
+            thumb=thumbnail_file              # Optional thumbnail file
+        )
+    )
