@@ -238,8 +238,6 @@ class Message(ChatGetter, SenderGetter, TLObject):
         self.grouped_id = grouped_id
         self.reactions = reactions
         self.restriction_reason = restriction_reason
-        self.topic_id = topic_id
-        self.topic_title = topic_title
         self.ttl_period = ttl_period
         self.quick_reply_shortcut_id = quick_reply_shortcut_id
         self.effect = effect
