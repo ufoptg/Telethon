@@ -937,7 +937,7 @@ class Message(ChatGetter, SenderGetter, TLObject):
                 if chunks:
                     # Fallback to send_message_chunks
                     message = args[0] if args else ''
-                    return await self.send_message_chunks(
+                    return await self._client.send_message_chunks(
                         await self.get_input_chat(),
                         message,
                         *args[1:],
@@ -965,7 +965,7 @@ class Message(ChatGetter, SenderGetter, TLObject):
                 if chunks:
                     # Fallback to send_message_chunks
                     message = args[0] if args else ''
-                    return await self.send_message_chunks(
+                    return await self._client.send_message_chunks(
                         await self.get_input_chat(),
                         message,
                         *args[1:],
