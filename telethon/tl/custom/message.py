@@ -920,26 +920,58 @@ class Message(ChatGetter, SenderGetter, TLObject):
         else:
             return transcribed_text
 
-    async def respond(self, *args, **kwargs):
+    async def respond(self, *args, chunks=False, **kwargs):
         """
-        Responds to the message (not as a reply). Shorthand for
-        `telethon.client.messages.MessageMethods.send_message`
-        with ``entity`` already set.
+        Responds to the chat action message (not as a reply). Shorthand for
+        `telethon.client.messages.MessageMethods.send_message` with
+        ``entity`` already set.
+
+        Arguments:
+            chunks (bool): If True, use send_message_chunks for long messages.
         """
         if self._client:
-            return await self._client.send_message(
-                await self.get_input_chat(), *args, **kwargs)
+            try:
+                return await self._client.send_message(
+                    await self.get_input_chat(), *args, **kwargs)
+            except errors.rpcerrorlist.MessageTooLongError:
+                if chunks:
+                    # Fallback to send_message_chunks
+                    message = args[0] if args else ''
+                    return await self._client.send_message_chunks(
+                        await self.get_input_chat(),
+                        message,
+                        *args[1:],
+                        **{k: v for k, v in kwargs.items() if k != 'chunks'}  # Exclude chunks from kwargs
+                    )
+                raise  # Re-raise the exception if chunks is False
 
-    async def reply(self, *args, **kwargs):
+    async def reply(self, *args, chunks=False, **kwargs):
         """
-        Replies to the message (as a reply). Shorthand for
-        `telethon.client.messages.MessageMethods.send_message`
-        with both ``entity`` and ``reply_to`` already set.
+        Replies to the chat action message (as a reply). Shorthand for
+        `telethon.client.messages.MessageMethods.send_message` with
+        both ``entity`` and ``reply_to`` already set.
+
+        Has the same effect as `respond` if there is no message.
+
+        Arguments:
+            chunks (bool): If True, use send_message_chunks for long messages.
         """
         if self._client:
             kwargs['reply_to'] = self.id
-            return await self._client.send_message(
-                await self.get_input_chat(), *args, **kwargs)
+            try:
+                return await self._client.send_message(
+                    await self.get_input_chat(), *args, **kwargs)
+            except errors.rpcerrorlist.MessageTooLongError:
+                if chunks:
+                    # Fallback to send_message_chunks
+                    message = args[0] if args else ''
+                    return await self._client.send_message_chunks(
+                        await self.get_input_chat(),
+                        message,
+                        *args[1:],
+                        **{k: v for k, v in kwargs.items() if k != 'chunks'}  # Exclude chunks from kwargs
+                    )
+                raise  # Re-raise the exception if chunks is False
 
     async def react(self, *args, **kwargs):
         """
