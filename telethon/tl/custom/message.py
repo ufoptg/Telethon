@@ -933,7 +933,7 @@ class Message(ChatGetter, SenderGetter, TLObject):
             try:
                 return await self._client.send_message(
                     await self.get_input_chat(), *args, **kwargs)
-            except telethon.errors.rpcerrorlist.MessageTooLongError:
+            except errors.rpcerrorlist.MessageTooLongError:
                 if chunks:
                     # Fallback to send_message_chunks
                     message = args[0] if args else ''
@@ -961,7 +961,7 @@ class Message(ChatGetter, SenderGetter, TLObject):
             try:
                 return await self._client.send_message(
                     await self.get_input_chat(), *args, **kwargs)
-            except telethon.errors.rpcerrorlist.MessageTooLongError:
+            except errors.rpcerrorlist.MessageTooLongError:
                 if chunks:
                     # Fallback to send_message_chunks
                     message = args[0] if args else ''
