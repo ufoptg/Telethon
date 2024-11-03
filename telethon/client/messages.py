@@ -926,10 +926,27 @@ class MessageMethods:
         return self._get_response_message(request, result, entity)
 
     async def send_message_chunks(
-            self: 'TelegramClient',
-            entity: 'hints.EntityLike',
-            message: str,
-            max_length: int = 4096
+        self: 'TelegramClient',
+        entity: 'hints.EntityLike',
+        message: str,
+        max_length: int = 4096,
+        *,
+        reply_to: 'typing.Union[int, types.Message]' = None,
+        attributes: 'typing.Sequence[types.TypeDocumentAttribute]' = None,
+        parse_mode: typing.Optional[str] = (),
+        formatting_entities: typing.Optional[typing.List[types.TypeMessageEntity]] = None,
+        link_preview: bool = True,
+        file: 'typing.Union[hints.FileLike, typing.Sequence[hints.FileLike]]' = None,
+        thumb: 'hints.FileLike' = None,
+        force_document: bool = False,
+        clear_draft: bool = False,
+        buttons: typing.Optional['hints.MarkupLike'] = None,
+        silent: bool = None,
+        background: bool = None,
+        supports_streaming: bool = False,
+        schedule: 'hints.DateLike' = None,
+        comment_to: 'typing.Union[int, types.Message]' = None,
+        nosound_video: bool = None,
     ):
         """
         Sends a message in chunks if it exceeds the maximum length.
@@ -938,13 +955,33 @@ class MessageMethods:
             entity (`EntityLike`): The target to whom the message will be sent.
             message (`str`): The message to be sent.
             max_length (`int`, optional): Maximum length of each message chunk (default is 4096).
+            Additional arguments are forwarded to `send_message`.
         """
         # Split the message into chunks based on the max length
         chunks = self._split_message(message, max_length)
         
-        # Send each chunk in sequence
+        # Send each chunk in sequence, passing along additional arguments
         for chunk in chunks:
-            await self.send_message(entity=entity, message=chunk)
+            await self.send_message(
+                entity=entity,
+                message=chunk,
+                reply_to=reply_to,
+                attributes=attributes,
+                parse_mode=parse_mode,
+                formatting_entities=formatting_entities,
+                link_preview=link_preview,
+                file=file,
+                thumb=thumb,
+                force_document=force_document,
+                clear_draft=clear_draft,
+                buttons=buttons,
+                silent=silent,
+                background=background,
+                supports_streaming=supports_streaming,
+                schedule=schedule,
+                comment_to=comment_to,
+                nosound_video=nosound_video,
+            )
 
     def _split_message(self, message: str, max_length: int) -> list:
         """
