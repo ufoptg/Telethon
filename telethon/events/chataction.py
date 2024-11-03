@@ -255,13 +255,12 @@ class ChatAction(EventBuilder):
                 await self.get_input_chat(), *args, **kwargs)
         except telethon.errors.rpcerrorlist.MessageTooLongError:
             if chunks:
-                # Fallback to send_message_chunks
                 message = args[0] if args else ''
                 return await self.send_message_chunks(
                     await self.get_input_chat(),
                     message,
                     *args[1:],
-                    **kwargs
+                    **{k: v for k, v in kwargs.items() if k != 'chunks'}  # Exclude chunks from kwargs
                 )
             raise  # Re-raise the exception if chunks is False
 
@@ -285,13 +284,12 @@ class ChatAction(EventBuilder):
                 await self.get_input_chat(), *args, **kwargs)
         except telethon.errors.rpcerrorlist.MessageTooLongError:
             if chunks:
-                # Fallback to send_message_chunks
                 message = args[0] if args else ''
                 return await self.send_message_chunks(
                     await self.get_input_chat(),
                     message,
                     *args[1:],
-                    **kwargs
+                    **{k: v for k, v in kwargs.items() if k != 'chunks'}  # Exclude chunks from kwargs
                 )
             raise  # Re-raise the exception if chunks is False
 
