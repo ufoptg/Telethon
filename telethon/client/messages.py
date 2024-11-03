@@ -925,6 +925,40 @@ class MessageMethods:
 
         return self._get_response_message(request, result, entity)
 
+    async def send_message_chunks(
+            self: 'TelegramClient',
+            entity: 'hints.EntityLike',
+            message: str,
+            max_length: int = 4096
+    ):
+        """
+        Sends a message in chunks if it exceeds the maximum length.
+        
+        Arguments:
+            entity (`EntityLike`): The target to whom the message will be sent.
+            message (`str`): The message to be sent.
+            max_length (`int`, optional): Maximum length of each message chunk (default is 4096).
+        """
+        # Split the message into chunks based on the max length
+        chunks = self._split_message(message, max_length)
+        
+        # Send each chunk in sequence
+        for chunk in chunks:
+            await self.send_message(entity=entity, message=chunk)
+
+    def _split_message(self, message: str, max_length: int) -> list:
+        """
+        Splits a long message into smaller chunks.
+
+        Arguments:
+            message (`str`): The message to be split.
+            max_length (`int`): Maximum length for each chunk.
+
+        Returns:
+            List of message chunks.
+        """
+        return [message[i:i + max_length] for i in range(0, len(message), max_length)]
+
     async def send_reaction(
         self: 'TelegramClient',
         entity: 'hints.EntityLike',
