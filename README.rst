@@ -150,3 +150,34 @@ Media File Attributes
             thumb=thumbnail_file              # Optional thumbnail file
         )
     )
+
+
+
+Sending Message as Chunks (When message exceeds 4096)
+---------------
+
+.. code-block:: python
+
+    from telethon import TelegramClient
+
+    # Instantiate your client
+    api_id = 'YOUR_API_ID'
+    api_hash = 'YOUR_API_HASH'
+    client = TelegramClient('session_name', api_id, api_hash)
+
+    # Example message that might exceed Telegram's length limits
+    long_message = "Your long message here, potentially thousands of characters..." * 100
+
+    async def main():
+        # Connect to Telegram
+        await client.start()
+        
+        # The entity to send the message to (could be a username, user ID, or group ID)
+        entity = 'username_or_id_here'
+        
+        # Send the message in chunks if it exceeds the max length
+        await client.send_message_chunks(entity, long_message)
+
+    # Run the main function in the event loop
+    with client:
+        client.loop.run_until_complete(main())
