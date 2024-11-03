@@ -929,20 +929,21 @@ class Message(ChatGetter, SenderGetter, TLObject):
         Arguments:
             chunks (bool): If True, use send_message_chunks for long messages.
         """
-        try:
-            return await self._client.send_message(
-                await self.get_input_chat(), *args, **kwargs)
-        except telethon.errors.rpcerrorlist.MessageTooLongError:
-            if chunks:
-                # Fallback to send_message_chunks
-                message = args[0] if args else ''
-                return await self.send_message_chunks(
-                    await self.get_input_chat(),
-                    message,
-                    *args[1:],
-                    **{k: v for k, v in kwargs.items() if k != 'chunks'}  # Exclude chunks from kwargs
-                )
-            raise  # Re-raise the exception if chunks is False
+        if self._client:
+            try:
+                return await self._client.send_message(
+                    await self.get_input_chat(), *args, **kwargs)
+            except telethon.errors.rpcerrorlist.MessageTooLongError:
+                if chunks:
+                    # Fallback to send_message_chunks
+                    message = args[0] if args else ''
+                    return await self.send_message_chunks(
+                        await self.get_input_chat(),
+                        message,
+                        *args[1:],
+                        **{k: v for k, v in kwargs.items() if k != 'chunks'}  # Exclude chunks from kwargs
+                    )
+                raise  # Re-raise the exception if chunks is False
 
     async def reply(self, *args, chunks=False, **kwargs):
         """
@@ -955,24 +956,22 @@ class Message(ChatGetter, SenderGetter, TLObject):
         Arguments:
             chunks (bool): If True, use send_message_chunks for long messages.
         """
-        if not self.action_message:
-            return await self.respond(*args, chunks=chunks, **kwargs)
-
-        kwargs['reply_to'] = self.action_message.id
-        try:
-            return await self._client.send_message(
-                await self.get_input_chat(), *args, **kwargs)
-        except telethon.errors.rpcerrorlist.MessageTooLongError:
-            if chunks:
-                # Fallback to send_message_chunks
-                message = args[0] if args else ''
-                return await self.send_message_chunks(
-                    await self.get_input_chat(),
-                    message,
-                    *args[1:],
-                    **{k: v for k, v in kwargs.items() if k != 'chunks'}  # Exclude chunks from kwargs
-                )
-            raise  # Re-raise the exception if chunks is False
+        if self._client:
+            kwargs['reply_to'] = self.id
+            try:
+                return await self._client.send_message(
+                    await self.get_input_chat(), *args, **kwargs)
+            except telethon.errors.rpcerrorlist.MessageTooLongError:
+                if chunks:
+                    # Fallback to send_message_chunks
+                    message = args[0] if args else ''
+                    return await self.send_message_chunks(
+                        await self.get_input_chat(),
+                        message,
+                        *args[1:],
+                        **{k: v for k, v in kwargs.items() if k != 'chunks'}  # Exclude chunks from kwargs
+                    )
+                raise  # Re-raise the exception if chunks is False
 
     async def react(self, *args, **kwargs):
         """
