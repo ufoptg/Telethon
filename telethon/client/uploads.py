@@ -409,7 +409,7 @@ class UploadMethods:
             file, force_document=force_document,
             file_size=file_size,
             progress_callback=progress_callback,
-            attributes=attributes,  allow_cache=allow_cache, thumb=thumb,
+            attributes=attributes, allow_cache=allow_cache, thumb=thumb,
             voice_note=voice_note, video_note=video_note,
             supports_streaming=supports_streaming, ttl=ttl,
             nosound_video=nosound_video,
@@ -482,7 +482,7 @@ class UploadMethods:
                 ))
 
                 fm = utils.get_input_media(
-                   r.document, supports_streaming=supports_streaming)
+                    r.document, supports_streaming=supports_streaming)
 
             if captions:
                 caption, msg_entities = captions.pop()
@@ -635,7 +635,7 @@ class UploadMethods:
 
             part_count = (file_size + part_size - 1) // part_size
             self._log[__name__].info('Uploading file of %d bytes in %d chunks of %d',
-                                    file_size, part_count, part_size)
+                                     file_size, part_count, part_size)
 
             pos = 0
             for part_index in range(part_count):
@@ -712,7 +712,7 @@ class UploadMethods:
 
         # `aiofiles` do not base `io.IOBase` but do have `read`, so we
         # just check for the read attribute to see if it's file-like.
-        if not isinstance(file, (str, bytes, types.InputFile, types.InputFileBig))\
+        if not isinstance(file, (str, bytes, types.InputFile, types.InputFileBig)) \
                 and not hasattr(file, 'read'):
             # The user may pass a Message containing media (or the media,
             # or anything similar) that should be treated as a file. Try
