@@ -168,7 +168,7 @@ class _MessagesIter(RequestIter):
 
         # When going in reverse we need an offset of `-limit`, but we
         # also want to respect what the user passed, so add them together.
-        if self.reverse:
+        if self.reverse and hasattr(self.request, 'add_offset'):
             self.request.add_offset -= _MAX_CHUNK_SIZE
 
         self.add_offset = add_offset
@@ -177,10 +177,11 @@ class _MessagesIter(RequestIter):
         self.last_id = 0 if self.reverse else float('inf')
 
     async def _load_next_chunk(self):
-        self.request.limit = min(self.left, _MAX_CHUNK_SIZE)
-        if self.reverse and self.request.limit != _MAX_CHUNK_SIZE:
-            # Remember that we need -limit when going in reverse
-            self.request.add_offset = self.add_offset - self.request.limit
+        if hasattr(self.request, 'limit'):
+            self.request.limit = min(self.left, _MAX_CHUNK_SIZE)
+            if self.reverse and self.request.limit != _MAX_CHUNK_SIZE:
+                # Remember that we need -limit when going in reverse
+                self.request.add_offset = self.add_offset - self.request.limit
 
         r = await self.client(self.request)
         self.total = getattr(r, 'count', len(r.messages))
@@ -206,7 +207,7 @@ class _MessagesIter(RequestIter):
             self.buffer.append(message)
 
         # Not a slice (using offset would return the same, with e.g. SearchGlobal).
-        if isinstance(r, types.messages.Messages):
+        if isinstance(r, types.messages.Messages) or not hasattr(self.request, 'limit'):
             return True
 
         # Some channels are "buggy" and may return less messages than
@@ -645,6 +646,8 @@ class MessageMethods:
             schedule: 'hints.DateLike' = None,
             comment_to: 'typing.Union[int, types.Message]' = None,
             nosound_video: bool = None,
+            send_as: typing.Optional['hints.EntityLike'] = None,
+            message_effect_id: typing.Optional[int] = None
     ) -> 'types.Message':
         """
         Sends a message to the specified user, chat or channel.
@@ -707,7 +710,7 @@ class MessageMethods:
                 Width/height and dimensions/size ratios may be important.
                 For Telegram to accept a thumbnail, you must provide the
                 dimensions of the underlying media through ``attributes=``
-                with :tl:`DocumentAttributesVideo` or by installing the
+                with :tl:`DocumentAttributeVideo` or by installing the
                 optional ``hachoir`` dependency.
 
             force_document (`bool`, optional):
@@ -766,6 +769,16 @@ class MessageMethods:
                 as a video due to other factors.) The value is ignored if set
                 on non-video files. This is set to ``True`` for albums, as gifs
                 cannot be sent in albums.
+
+            send_as (`entity`):
+                Unique identifier (int) or username (str) of the chat or channel to send the message as.
+                You can use this to send the message on behalf of a chat or channel where you have appropriate permissions.
+                Use the GetSendAs to return the list of message sender identifiers, which can be used to send messages in the chat,
+                This setting applies to the current message and will remain effective for future messages unless explicitly changed.
+                To set this behavior permanently for all messages, use SaveDefaultSendAs.
+
+            message_effect_id (`int`, optional):
+                Unique identifier of the message effect to be added to the message; for private chats only
 
         Returns
             The sent `custom.Message <telethon.tl.custom.message.Message>`.
@@ -839,6 +852,7 @@ class MessageMethods:
                 formatting_entities=formatting_entities,
                 comment_to=comment_to, background=background,
                 nosound_video=nosound_video,
+                send_as=send_as, message_effect_id=message_effect_id
             )
 
         entity = await self.get_input_entity(entity)
@@ -868,7 +882,8 @@ class MessageMethods:
                     buttons=markup,
                     formatting_entities=message.entities,
                     parse_mode=None,  # explicitly disable parse_mode to force using even empty formatting_entities
-                    schedule=schedule
+                    schedule=schedule,
+                    send_as=send_as, message_effect_id=message_effect_id
                 )
 
             request = functions.messages.SendMessageRequest(
@@ -882,7 +897,9 @@ class MessageMethods:
                 clear_draft=clear_draft,
                 no_webpage=not isinstance(
                     message.media, types.MessageMediaWebPage),
-                schedule_date=schedule
+                schedule_date=schedule,
+                send_as=await self.get_input_entity(send_as) if send_as else None,
+                effect=message_effect_id
             )
             message = message.message
         else:
@@ -903,7 +920,9 @@ class MessageMethods:
                 silent=silent,
                 background=background,
                 reply_markup=self.build_reply_markup(buttons),
-                schedule_date=schedule
+                schedule_date=schedule,
+                send_as=await self.get_input_entity(send_as) if send_as else None,
+                effect=message_effect_id
             )
 
         result = await self(request)
@@ -1008,6 +1027,7 @@ class MessageMethods:
             as_album: bool = None,
             schedule: 'hints.DateLike' = None,
             drop_author: bool = None,
+            drop_media_captions: bool = None,
     ) -> 'typing.Sequence[types.Message]':
         """
         Forwards the given messages to the specified entity.
@@ -1050,6 +1070,12 @@ class MessageMethods:
                 If set, the message(s) won't forward immediately, and
                 instead they will be scheduled to be automatically sent
                 at a later time.
+
+            drop_author (`bool`, optional):
+                Whether to forward messages without quoting the original author.
+
+            drop_media_captions (`bool`, optional):
+                Whether to strip captions from media. Setting this to `True` requires that `drop_author` also be set to `True`.
 
         Returns
             The list of forwarded `Message <telethon.tl.custom.message.Message>`,
@@ -1120,7 +1146,8 @@ class MessageMethods:
                 background=background,
                 with_my_score=with_my_score,
                 schedule_date=schedule,
-                drop_author=drop_author
+                drop_author=drop_author,
+                drop_media_captions=drop_media_captions
             )
             result = await self(req)
             sent.extend(self._get_response_message(req, result, entity))
@@ -1130,7 +1157,7 @@ class MessageMethods:
     async def edit_message(
             self: 'TelegramClient',
             entity: 'typing.Union[hints.EntityLike, types.Message]',
-            message: 'hints.MessageLike' = None,
+            message: 'typing.Union[int, types.Message, types.InputMessageID, str]' = None,
             text: str = None,
             *,
             parse_mode: str = (),
@@ -1160,7 +1187,7 @@ class MessageMethods:
                 which is the only way to edit messages that were sent
                 after the user selects an inline query result.
 
-            message (`int` | `Message <telethon.tl.custom.message.Message>` | `str`):
+            message (`int` | `Message <telethon.tl.custom.message.Message>` | :tl:`InputMessageID` | `str`):
                 The ID of the message (or `Message
                 <telethon.tl.custom.message.Message>` itself) to be edited.
                 If the `entity` was a `Message
@@ -1199,7 +1226,7 @@ class MessageMethods:
                 Width/height and dimensions/size ratios may be important.
                 For Telegram to accept a thumbnail, you must provide the
                 dimensions of the underlying media through ``attributes=``
-                with :tl:`DocumentAttributesVideo` or by installing the
+                with :tl:`DocumentAttributeVideo` or by installing the
                 optional ``hachoir`` dependency.
 
             force_document (`bool`, optional):

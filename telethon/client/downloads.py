@@ -63,9 +63,12 @@ class _DirectDownloadIter(RequestIter):
                 config = await self.client(functions.help.GetConfigRequest())
                 for option in config.dc_options:
                     if option.ip_address == self.client.session.server_address:
-                        self.client.session.set_dc(
-                            option.id, option.ip_address, option.port)
-                        self.client.session.save()
+                        await utils.maybe_async(
+                            self.client.session.set_dc(
+                                option.id, option.ip_address, option.port
+                            )
+                        )
+                        await utils.maybe_async(self.client.session.save())
                         break
 
                 # TODO Figure out why the session may have the wrong DC ID
@@ -992,8 +995,8 @@ class DownloadMethods:
             )
 
         # TODO Better way to get opened handles of files and auto-close
-        kind, possible_names = self._get_kind_and_names(web.attributes)
-        file = self._get_proper_filename(
+        kind, possible_names = cls._get_kind_and_names(web.attributes)
+        file = cls._get_proper_filename(
             file, kind, utils.get_extension(web),
             possible_names=possible_names
         )
@@ -1051,8 +1054,11 @@ class DownloadMethods:
 
         if os.path.isdir(file) or not file:
             try:
+                isreserved = getattr(os.path, 'isreserved', lambda _: False)  # Python 3.13 and above
                 name = None if possible_names is None else next(
-                    x for x in possible_names if x
+                    x  # basename to prevent path traversal (#4713)
+                    for x in map(os.path.basename, possible_names)
+                    if x and not isreserved(x)
                 )
             except StopIteration:
                 name = None
