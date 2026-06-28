@@ -13,6 +13,121 @@ it can take advantage of new goodies!
 
 .. contents:: List of All Versions
 
+New layer (v1.42)
+=================
+
++------------------------+
+| Scheme layer used: 216 |
++------------------------+
+
+`View new and changed raw API methods <https://diff.telethon.dev/?from=214&to=216>`__.
+
+Bug fixes
+~~~~~~~~~
+
+* Fixed support for Python 3.14.
+* Removed potential misuse when downloading files using inferred path.
+
+
+New layer (v1.41)
+=================
+
++------------------------+
+| Scheme layer used: 214 |
++------------------------+
+
+`View new and changed raw API methods <https://diff.telethon.dev/?from=201&to=214>`__.
+
+Additions
+~~~~~~~~~
+
+* ``send_as`` and ``effect`` added to ``send_file``.
+* ``mime_type`` added to ``send_file``.
+* ``tg-emoji`` now works with HTML parse mode.
+* Clicking a button now lets you choose whether to open the browser.
+* Persistent and placeholder buttons.
+* More separate RPC error classes.
+
+Enhancements
+~~~~~~~~~~~~
+
+* Update entities should now be cached to session more reliably.
+* ``utils.get_display_name`` now handles more types.
+* Improved some type hints.
+* Reply properties for stories now behave as expected.
+* ``isal`` can now be used as an optional dependency for faster compression.
+* Potential slight speed improvements to deserialization.
+
+Bug fixes
+~~~~~~~~~
+
+* Library was not saving update sequence from certain updates.
+* Input peer cache should no longer overwrite valid data with min peers.
+* Spoiler for input photos and documents was not being respected.
+
+New layer (v1.40)
+=================
+
++------------------------+
+| Scheme layer used: 201 |
++------------------------+
+
+`View new and changed raw API methods <https://diff.telethon.dev/?from=199&to=201>`__.
+
+Additions
+~~~~~~~~~
+
+* ``send_as`` and ``effect`` added to ``send_message`` and related methods.
+* :tl:`MessageMediaGeoLive` is now recognized for auto-input conversion.
+
+Enhancements
+~~~~~~~~~~~~
+
+* Improved wording when using a likely unintended session file.
+* Improved behaviour for matching Markdown links.
+* A truly clean update-state is now fetched upon login. This was most notably important for bots.
+* Time offset is now updated more reliably after connecting. This should fix legitimate "message too old/new" issues.
+
+Bug fixes
+~~~~~~~~~
+
+* :tl:`ChannelParticipantLeft` is now skipped in ``iter_participants``.
+* ``spoiler`` flag was lost on :tl:`MessageMediaPhoto` auto-input conversion.
+* :tl:`KeyboardButtonCopy` is now recognized as an inline button.
+* Downloading web-documents should now work again. Note that this still fetches the file from the original server.
+
+
+New layer (v1.39)
+=================
+
++------------------------+
+| Scheme layer used: 199 |
++------------------------+
+
+`View new and changed raw API methods <https://diff.telethon.dev/?from=193&to=199>`__.
+
+Additions
+~~~~~~~~~
+
+* ``drop_media_captions`` added to ``forward_messages``, and documented together with ``drop_author``.
+* :tl:`InputMediaDocumentExternal` is now recognized when sending albums.
+
+Enhancements
+~~~~~~~~~~~~
+
+* ``receive_updates=False`` now covers more cases, however, Telegram is still free to ignore it.
+* Better type-hints in several methods.
+* Markdown parsing of inline links should cover more cases.
+* ``range`` is now considered "list-like" and can be used on e.g. ``ids`` parameters.
+
+Bug fixes
+~~~~~~~~~
+
+* Session is now saved after setting the DC.
+* Fixed rare crash in entity cache handling when iterating through dialogs.
+* Fixed IOError that could occur during automatic resizing of some photos.
+
+
 New layer (v1.38)
 =================
 
