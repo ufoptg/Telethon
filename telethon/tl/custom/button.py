@@ -58,18 +58,22 @@ class Button:
         """
         Returns `True` if the button belongs to an inline keyboard.
         """
-        return isinstance(button, (
-            types.KeyboardInlineButton,
-            types.KeyboardButtonCopy,
-            types.KeyboardButtonBuy,
-            types.KeyboardButtonCallback,
-            types.KeyboardButtonGame,
-            types.KeyboardButtonSwitchInline,
-            types.KeyboardButtonUrl,
-            types.InputKeyboardButtonUrlAuth,
-            types.KeyboardButtonWebView,
-            types.InputKeyboardButtonUserProfile,
-        ))
+        inline_types = [types.KeyboardInlineButton]
+        for attr in (
+            "KeyboardButtonCopy",
+            "KeyboardButtonBuy",
+            "KeyboardButtonCallback",
+            "KeyboardButtonGame",
+            "KeyboardButtonSwitchInline",
+            "KeyboardButtonUrl",
+            "InputKeyboardButtonUrlAuth",
+            "KeyboardButtonWebView",
+            "InputKeyboardButtonUserProfile",
+        ):
+            value = getattr(types, attr, None)
+            if value is not None:
+                inline_types.append(value)
+        return isinstance(button, tuple(inline_types))
 
     @staticmethod
     def inline(text, data=None, style=None, icon=None):
@@ -359,7 +363,10 @@ class Button:
         `Games <https://core.telegram.org/api/bots/games>`__
         documentation for more information on using games.
         """
-<<<<<<< HEAD
+        if hasattr(types, "KeyboardInlineButton") and hasattr(types, "InlineButtonTypeGame"):
+            return types.KeyboardInlineButton(text, types.InlineButtonTypeGame(),
+                                             style=Button._get_style(style, icon))
+
         return types.KeyboardButtonGame(text)
 
     @staticmethod
@@ -367,7 +374,10 @@ class Button:
         """Send Button with UserProfile mention.
 
         call 'get_input_entity' to fill in user parameter."""
+        if hasattr(types, "KeyboardInlineButton") and hasattr(types, "InlineButtonTypeUserProfile"):
+            return types.KeyboardInlineButton(
+                text, types.InlineButtonTypeUserProfile(user),
+                style=Button._get_style(None, None)
+            )
+
         return types.InputKeyboardButtonUserProfile(text, user)
-=======
-        return types.KeyboardInlineButton(text, types.InlineButtonTypeGame(), style=Button._get_style(style, icon))
->>>>>>> codeberg/v1
